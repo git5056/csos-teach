@@ -5,6 +5,7 @@
 #include <csos/stdlib.h>
 #include <paging.h>
 #include <interrupt.h>
+#include <logf.h>
 
 static mutex_t task_mutex;
 static tss_task_t task_table[OS_TASK_MAX_SIZE];
@@ -16,7 +17,11 @@ static uint32_t task_pid = 0;
 static uint32_t idle_task_stack[1024];
 static void idle_task_entry()
 {
-    while (TRUE) HLT;
+    // while (TRUE) HLT;
+    while (TRUE) {
+        int dd=2;
+        dd++;
+        HLT;};
 }
 
 static int tss_init(tss_task_t *task, uint32_t flag, uint32_t entry, uint32_t esp)
@@ -24,6 +29,7 @@ static int tss_init(tss_task_t *task, uint32_t flag, uint32_t entry, uint32_t es
     uint32_t selector = alloc_gdt_table_entry();
     if (selector < 0) return selector;
 
+    const uint32_t a = sizeof(tss_t);
     tss_t *tss = &task->tss;
     set_gdt_table_entry(selector, (uint32_t)tss, sizeof(tss_t),
         SEG_ATTR_P | SEG_ATTR_DPL0 | SEG_TYPE_TSS);
@@ -78,6 +84,19 @@ uint32_t tss_task_getpid()
     return task->pid;
 }
 
+static uint32_t default_task_stack2[1024];
+static void default_task_entry2()
+{
+    int dd=2;
+    // while (TRUE) HLT;
+    while (TRUE) {
+        dd++;
+        logf("default_task_entry2:%d\n",dd);
+        // return;
+        sleep(1000);
+    };
+}
+
 void tss_task_queue_init()
 {
     kernel_memset(task_table, 0, sizeof(task_table));
@@ -99,6 +118,8 @@ void tss_task_queue_init()
     tss_task_queue.running_task = NULL;
     // 初始化空闲任务
     tss_task_init(&tss_task_queue.idle_task, "idle task", TASK_LEVEL_SYSTEM, (uint32_t)idle_task_entry, (uint32_t)&idle_task_stack[1024]);
+
+    tss_task_init(&tss_task_queue.default_task2, "default task2", TASK_LEVEL_SYSTEM, (uint32_t)default_task_entry2, (uint32_t)&default_task_stack2[1024]);
 }
 
 void default_tss_task_init()
@@ -108,20 +129,112 @@ void default_tss_task_init()
     // default task 代码开始结束位置
     extern uint8_t b_init_task[], e_init_task[];
     // 计算需要拷贝的字节数
+    uint32_t xxe = (uint32_t) e_init_task;
+    uint32_t l_b_init_task = (uint32_t) b_init_task;
+    uint32_t l_e_init_task = (uint32_t) e_init_task;
+    void* pxxe =  &e_init_task;
+    void*  pxxb = &b_init_task;
     uint32_t copy_size = (uint32_t)(e_init_task - b_init_task);
     // 分配空间
     uint32_t alloc_size = PAGE_SIZE * 10;
     // 初始化任务
     uint32_t init_start = (uint32_t)init_task_entry;
-    tss_task_init(&tss_task_queue.default_task, "default task", TASK_LEVEL_USER, init_start, init_start + alloc_size);
+    uint32_t v_init_start = init_start;
+    extern uint32_t gadd;
+    uint32_t l_init_start = v_init_start + gadd; // 注释1. laddr,由于这里lds里面设置了noload,因此init_task段是没有重定向的,因此这里直接使用laddr为新的pde下的虚拟地址
+    // 注释2,注释1的方案已废弃.已取消(NOLOAD),因此现在需要手动重定向一下地址,重定向数据存放在499扇区
+    init_start= 0x450000;
+    uint32_t v_b_init_task = l_b_init_task - gadd; // vaddr
+    void * pb_init_task = (void *)b_init_task;
+    // tss_task_init(&tss_task_queue.default_task, "default task", TASK_LEVEL_USER, init_start, init_start + alloc_size);
+    // tss_task_init(&tss_task_queue.default_task, "default task", TASK_LEVEL_USER, l_init_start, l_b_init_task + alloc_size); // 见注释1
+    tss_task_init(&tss_task_queue.default_task, "default task", TASK_LEVEL_SYSTEM, l_init_start, l_b_init_task + alloc_size); // 见注释1
+    
     tss_task_queue.default_task.bheap = (uint32_t)e_init_task;
     tss_task_queue.default_task.eheap = (uint32_t)e_init_task;
     write_tr(tss_task_queue.default_task.selector);
     tss_task_queue.running_task = &tss_task_queue.default_task;
     uint32_t pde = tss_task_queue.default_task.tss.cr3;
+    //set_pde(pde);
+    // alloc_pages(pde, init_start, alloc_size, PTE_P | PTE_W | PTE_U);
+    alloc_pages(pde, l_b_init_task, alloc_size, PTE_P | PTE_W | PTE_U); // 加载地址就是新的pde对应的虚拟地址,为这个地址映射内存
+    // kernel_memcpy((void *)init_start, (void *)b_init_task, copy_size);
+    uint32_t xxx = (uint32_t)b_init_task;
     set_pde(pde);
-    alloc_pages(pde, init_start, alloc_size, PTE_P | PTE_W | PTE_U);
-    kernel_memcpy((void *)init_start, (void *)b_init_task, copy_size);
+    extern int aaab;
+    // aaab=1;
+    kernel_memcpy((void *)l_b_init_task, (void *)v_b_init_task, copy_size); // 由于系统pde和新建的pde的低位内存存在相同的映射,故可以直接复制
+    // aaab=0;
+    // *(uint32_t*)(v_b_init_task+0x20)=0x12345678;
+    // 见注释2
+    void relocation_init_task(void *dst,uint32_t l_b_init_task,uint32_t l_e_init_task);
+    relocation_init_task((void *)l_b_init_task,l_b_init_task,l_e_init_task);
+    // kernel_memcpy((void *)0x10c000, (void *)0x60000, copy_size);
+    // set_pde(pde);
+}
+
+#define is_hex_digit(c)    (((c) >= '0' && (c) <= '9') || ((c) >= 'a' && (c) <= 'f') )
+
+static inline uint32_t skip_atoi_hex(const char **s)
+{
+    uint32_t i=0;
+
+    while (is_hex_digit(**s)){
+        if(**s>='a'){
+            i = i*16u + *((*s)++) - 'a' + 10;
+        }else{
+            i = i*16u + *((*s)++) - '0';
+        }
+    }
+      
+    return i;
+}
+
+void relocation_init_task(void *dst,uint32_t l_b_init_task,uint32_t l_e_init_task){
+    uint8_t buffer[512];
+    read_disk(499, 1, (uint16_t*)buffer);
+    uint8_t *src, *begin,c;
+    begin = src = buffer;
+    uint32_t relocations[100],relocations_len=0;
+    while ((c= *src++)!='\0'){};
+    src--;
+    *src++='\n';
+    *src++='\0';
+    src = buffer;
+    while ((c= *src++)!='\0')
+    {
+        if(c=='\r'||c=='\n'){
+            if(begin!=0){
+                uint32_t num = skip_atoi_hex((const char**)&begin);
+                relocations[relocations_len++]=num;
+                num++;
+            }
+
+            begin = 0;
+        }else if(begin==0){
+            begin = src-1;
+        }
+    }
+    extern uint32_t gadd;
+    uint32_t imagebase =0x400000,foffset,taddr,laddr,vaddr;
+    uint32_t v_b_init_task =l_b_init_task - gadd ;
+    uint32_t v_e_init_task =l_e_init_task - gadd;
+    uint32_t tadd1 = (uint32_t)dst - v_b_init_task;
+    for (uint32_t i = 0; i < relocations_len; i++)
+    {
+        logf("relocation addr:%x\n", relocations[i]);
+        laddr = imagebase + relocations[i];
+        vaddr = laddr - gadd;
+        foffset = laddr - l_b_init_task;
+        taddr = *(uint32_t*)(dst+foffset);
+        if(taddr>=v_b_init_task&&taddr<=v_e_init_task){
+            void *asd =(void*)(taddr + tadd1);
+            logf("xxx addr:%x\t==>%x\n", foffset,taddr + tadd1);
+            *(uint32_t*)(dst+foffset) = taddr + tadd1;
+        }
+
+    }
+    
 }
 
 tss_task_t *get_default_tss_task()
@@ -146,7 +259,8 @@ void tss_task_set_ready(tss_task_t *task)
 void tss_task_set_block(tss_task_t *task)
 {
     // 防止空闲任务进入运行任务队列
-    if (task == &tss_task_queue.idle_task) return;
+    if (task == &tss_task_queue.idle_task) 
+    return;
     
     list_remove(&tss_task_queue.ready_list, &task->running_node);
 }
@@ -364,6 +478,7 @@ if (task->selector) {
 
 void tss_task_ts()
 {
+    // return;
     protect_state_t ps = protect_enter();
     list_node_t *node = list_get_first(&tss_task_queue.sleep_list);
     while (node)

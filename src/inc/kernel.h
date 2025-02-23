@@ -74,7 +74,7 @@ typedef struct gdt_table_t
     uint8_t base_m;
     uint16_t attr;
     uint8_t base_h;
-} gdt_table_t;
+} gdt_table_t ;
 
 typedef struct gdt_gate_t
 {
@@ -86,7 +86,8 @@ typedef struct gdt_gate_t
 
 /*==================GDT Functions==================*/
 
-void gdt32_init(gdt_table_t *gdt_table);
+// void gdt32_init(gdt_table_t *gdt_table);
+void gdt32_init();
 
 uint32_t alloc_gdt_table_entry();
 
@@ -264,3 +265,5 @@ static inline void far_jump(uint32_t selector, uint32_t offset) {
 void protect_mode();
 
 #endif
+
+void csos_init(memory_info_t *mem_info, uint32_t gdt_info);

@@ -161,7 +161,7 @@ int dev_disk_open(device_t *dev)
         logf("disk invalid");
         return -1;
     }
-    disk_part_t *part = disk->parts[part_idx];
+    disk_part_t *part = &disk->parts[part_idx];
     if (part->total_sector == 0) {
         logf("disk partition invalid");
         return -1;
@@ -177,6 +177,7 @@ void handler_hdc(interrupt_frame_t* frame)
     send_eoi(IRQ6_HDC);
 }
 
+int dev_disk_command(device_t *dev, int cmd, int arg0, int arg1);
 // 读取设备
 int dev_disk_read(device_t *dev, int addr, char *buf, int size)
 {
@@ -191,6 +192,7 @@ int dev_disk_read(device_t *dev, int addr, char *buf, int size)
         return -1;
     }
     mutex_lock(&disk->mutex);
+
     dev_disk_command(dev, DISK_CMD_READ, addr, size);
     for (int i = 0; i < size; i++) {
         sem_wait(&sem);

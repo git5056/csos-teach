@@ -2,17 +2,43 @@
 #include <interrupt.h>
 #include <csos/mutex.h>
 #include <csos/syscall.h>
+#include <paging.h>
 
 // 开始索引为3（0: unused, 1: kernel 32-code, 2: kernel 32-data, 3: user 32-code, 4: user 32-data, 5: syscall）
 static uint32_t index = 6;
 // GDT指针
 static gdt_table_t *gdt;
 
+static gdt_table_t gdt_table[GDT_SIZE] __attribute__((aligned(PAGE_SIZE))) = {
+    {0, 0, 0, 0}
+};
+
 extern mutex_t mutex;
 
-void gdt32_init(gdt_table_t *gdt_table)
+void init_gdt()
 {
+    for (int i = 0; i < GDT_SIZE; i++) {
+        set_gdt_table_entry(i << 3, 0, 0, 0);
+    }
+
+    set_gdt_table_entry(KERNEL_DATA_SEG, 0, 0xFFFFFFFF, 
+        SEG_ATTR_P | SEG_ATTR_DPL0 | SEG_NORMAL | SEG_TYPE_DATA  | SEG_TYPE_RW | SEG_ATTR_D | SEG_ATTR_G);
+
+    set_gdt_table_entry(KERNEL_CODE_SEG, 0, 0xFFFFFFFF, 
+        SEG_ATTR_P | SEG_ATTR_DPL0 | SEG_NORMAL | SEG_TYPE_CODE  | SEG_TYPE_RW | SEG_ATTR_D | SEG_ATTR_G);
+
+    set_gdt_table_entry(USER_DATA_SEG, 0, 0xFFFFFFFF, 
+        SEG_ATTR_P | SEG_ATTR_DPL3 | SEG_NORMAL | SEG_TYPE_DATA  | SEG_TYPE_RW | SEG_ATTR_D);
+    set_gdt_table_entry(USER_CODE_SEG, 0, 0xFFFFFFFF, 
+        SEG_ATTR_P | SEG_ATTR_DPL3 | SEG_NORMAL | SEG_TYPE_CODE  | SEG_TYPE_RW | SEG_ATTR_D);
+}
+
+void gdt32_init()
+{
+    uint32_t a = sizeof(gdt_table[0]);
     gdt = gdt_table;
+    init_gdt();
+   
     set_syscall_gate(SYSCALL_GATE_SEG, 
         KERNEL_CODE_SEG, (uint32_t)syscall_handler, 
         GATE_ATTR_DPL3 | GATE_ATTR_P | GATE_TYPE_SYSCALL | SYSCALL_PMC);
