@@ -1,0 +1,8 @@
+	reloc    0 offset   1c [5001c] HIGHLOW
+	reloc    1 offset   21 [50021] HIGHLOW
+	reloc    2 offset   27 [50027] HIGHLOW
+	reloc    3 offset   2f [5002f] HIGHLOW
+	reloc    4 offset   51 [50051] HIGHLOW
+	reloc    5 offset   64 [50064] HIGHLOW
+	reloc    6 offset   68 [50068] HIGHLOW
+	reloc    7 offset    0 [50000] ABSOLUTE
