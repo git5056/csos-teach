@@ -1,6 +1,6 @@
 #include "os.h"
 
-.extern kernel_init, kernel32_init
+.extern _kernel_init, _kernel32_init
 
 .code16
 .text

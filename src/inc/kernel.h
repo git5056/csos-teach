@@ -10,7 +10,7 @@
 #define TASK_LEVEL_USER     (1 << 1)
 
 #define TASK_NAME_SIZE      32
-#define TASK_DEFAULT_TICKS  10
+#define TASK_DEFAULT_TICKS  (10/5)
 
 typedef enum {
     TASK_CREATED,
@@ -74,7 +74,7 @@ typedef struct gdt_table_t
     uint8_t base_m;
     uint16_t attr;
     uint8_t base_h;
-} gdt_table_t;
+} gdt_table_t ;
 
 typedef struct gdt_gate_t
 {
@@ -86,7 +86,8 @@ typedef struct gdt_gate_t
 
 /*==================GDT Functions==================*/
 
-void gdt32_init(gdt_table_t *gdt_table);
+// void gdt32_init(gdt_table_t *gdt_table);
+void gdt32_init();
 
 uint32_t alloc_gdt_table_entry();
 
@@ -261,6 +262,14 @@ static inline void far_jump(uint32_t selector, uint32_t offset) {
 	__asm__ volatile("ljmpl *(%[a])"::[a]"r"(addr));
 }
 
+static inline void far_jump23(uint32_t selector, uint32_t offset,uint32_t cr3) {
+	uint32_t addr[] = { offset, selector };
+		// __asm__ volatile("mov %[v], %%cr3"::[v]"r"(cr3));
+
+	__asm__ volatile("ljmpl *(%[a])"::[a]"r"(addr));
+}
 void protect_mode();
 
 #endif
+
+void csos_init(memory_info_t *mem_info, uint32_t gdt_info);

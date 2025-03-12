@@ -16,6 +16,8 @@
 #define SYS_NR_SBRK         8
 #define SYS_NR_PRINTF       9
 
+#define SYS_NR_SW           0xa
+
 #define SYSCALL_LCALL
 
 void syscall_handler();
@@ -113,7 +115,9 @@ static inline int malloc(uint32_t size)
     return _syscall(&sbrk_arg);
 }
 
-static inline int printf(const char *fmt, ...)
+
+// static inline int printf(const char *fmt, ...) __attribute__((always_inline));
+ static inline int printf(const char *fmt, ...)
 {
     char buffer[1024];
     va_list args;

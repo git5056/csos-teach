@@ -13,7 +13,8 @@ typedef struct tss_t
     uint32_t es, cs, ss, ds, fs, gs;
     uint32_t ldt;
     uint32_t iomap;
-} tss_t;
+} tss_t ;
+//__attribute__((packed));
 
 typedef struct tss_task_t {
     task_state_t state;
@@ -54,6 +55,9 @@ typedef struct tss_task_queue_t
     tss_task_t default_task;
     // 空闲任务
     tss_task_t idle_task;
+
+    tss_task_t default_task2;
+
     // 当前正在运行的任务
     tss_task_t *running_task;
     // 应用级代码段选择子

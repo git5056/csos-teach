@@ -20,16 +20,58 @@ void cmos_write(uint8_t addr, uint8_t value)
 
 static uint32_t volatile counter = 0;
 
-void handler_rtc(interrupt_frame_t* frame)
+extern uint32_t count_rtc;
+extern uint32_t int_count;
+uint32_t log[5];
+const uint32_t loglen = sizeof(log) / sizeof(log[0]);
+uint32_t logi = 0;
+#include <logf.h>
+void rtcinit(){
+    logi = 0;
+}
+
+void printlog()
+{
+    uint32_t len = logi;
+    for (uint32_t i = 2; i < len - 2 && i < loglen - 2; i += 2)
+    {
+        logf("i:%u\ttime:%u\tint:%u===>cost:%u\thz:%u\n", i / 2, log[i], log[i + 1],
+             log[i] - log[i - 2],
+             log[i + 1] - log[i + 1 - 2]);
+    }
+}
+
+void handler_rtc(interrupt_frame_t *frame)
 {
     send_eoi(IRQ1_RTC);
     uint8_t vc = cmos_read(CMOS_C);
-    create_alarm(1);
+    // create_alarm(1);
 
     if (vc & CMOS_C_AF)
         tty_printf("A");
     else if (vc & CMOS_C_PF)
-        tty_printf(".");
+    {
+        count_rtc++;
+        if (logi < loglen - 2)
+        {
+            log[logi++] = count_rtc;
+            log[logi++] = int_count;
+        }
+        // tty_printf(".");
+        // int_count = 0;
+    }
+
+    return;
+
+    int dd = 2;
+    dd++;
+    while (1)
+    {
+        dd++;
+        dd++;
+        dd++;
+        /* code */
+    }
 }
 
 void create_alarm(uint32_t value)
@@ -44,19 +86,22 @@ void create_alarm(uint32_t value)
     uint32_t hour = value;
 
     time.tm_sec += sec;
-    if (time.tm_sec >= 60){
+    if (time.tm_sec >= 60)
+    {
         time.tm_sec %= 60;
         time.tm_min += 1;
     }
 
     time.tm_min += min;
-    if (time.tm_min >= 60){
+    if (time.tm_min >= 60)
+    {
         time.tm_min %= 60;
         time.tm_hour += 1;
     }
 
     time.tm_hour += (int)hour;
-    if (time.tm_hour >= 24) {
+    if (time.tm_hour >= 24)
+    {
         time.tm_hour %= 24;
     }
 
@@ -75,7 +120,8 @@ void rtc_init()
     create_alarm(1);
     // 设置中断频率
     prev = cmos_read(CMOS_A);
-    cmos_write(CMOS_A, (prev &0xF0) | 0b1111);
+    // cmos_write(CMOS_A, (prev & 0xF0) | 0b1001);
+    cmos_write(CMOS_A, (prev & 0xF0) | 0b1110);
 
     install_interrupt_handler(IRQ1_RTC, (uint32_t)interrupt_handler_rtc);
     irq_enable(IRQ1_RTC);

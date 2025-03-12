@@ -6,6 +6,7 @@
 #include <device.h>
 #include <csos/string.h>
 
+uint32_t keydown = 0;
 static const key_map_t kmt[] = {
     [0x29] = {'`', '~'},
     [0x2] = {'1', '!'},
@@ -71,114 +72,144 @@ static const key_map_t kmt[] = {
     [0x28] = {'\'', '"'},
     [0x1A] = {'[', '{'},
     [0x1B] = {']', '}'},
-    [0x2B] = {'\\', '|'}
-};
+    [0x2B] = {'\\', '|'}};
 
 static key_state_t ks;
 
-#define MAKE_CODE(rc)       !((rc) & 0x80)
-#define KEY_CODE(rc)        ((rc) & 0x7F)
+#define MAKE_CODE(rc) !((rc) & 0x80)
+#define KEY_CODE(rc) ((rc) & 0x7F)
 
 static void handle_normal_key(uint8_t rc)
 {
+    extern uint32_t isstart;
     // 处理双字节按键
-    if (rc == KEY_E0) 
+    if (rc == KEY_E0)
         ks.e0 = 1;
     uint8_t is_make = MAKE_CODE(rc);
     uint8_t key = KEY_CODE(rc);
-    switch (key) {
-        case KEY_F1:
-        case KEY_F2:
-        case KEY_F3:
-        case KEY_F4:
-        case KEY_F5:
-        case KEY_F6:
-        case KEY_F7:
-        case KEY_F8:
-        case KEY_F9:
-        case KEY_F10:
-        case KEY_F11:
-        case KEY_F12:
-            logf("F-Keys: %d", key);
-            break;
-        case KEY_ESC:
-            if (is_make) logf("ESC");
-            break;
-        case KEY_ENTER:
-            char enter = '\n';
-            if (is_make) device_write(0, 0, &enter, 1);
-            break;
-        case KEY_SPACE:
-            char space = ' ';
-            if (is_make) device_write(0, 0, &space, 1);
-            break;
-        case KEY_BACKSPACE:
-            char bs = '\b';
-            if (is_make) device_write(0, 0, &bs, 1);
-            break;
-        case KEY_TAB:
-            char tb = '\t';
-            if (is_make) device_write(0, 0, &tb, 1);
-            break;
-        case KEY_CAPS:
-            if (is_make) ks.caps_lock = ~ks.caps_lock;
-            break;
-        case KEY_CTRL:
-            if (ks.e0) {
-                if (is_make) logf("Right Ctrl");
-                ks.rp_ctrl = is_make;
-                ks.e0 = 0;
-            } else {
-                if (is_make) logf("Left Ctrl");
-                ks.lp_ctrl = is_make;
+    switch (key)
+    {
+    case KEY_F1:
+        keydown = 1;
+        break;
+    case KEY_F2:
+        extern uint32_t count_rtc;
+        count_rtc = 0;
+        isstart = 1;
+        break;
+    case KEY_F3:
+        isstart = 3;
+        break;
+    case KEY_F4:
+    case KEY_F5:
+    case KEY_F6:
+    case KEY_F7:
+    case KEY_F8:
+    case KEY_F9:
+    case KEY_F10:
+    case KEY_F11:
+    case KEY_F12:
+        logf("F-Keys: %d", key);
+        break;
+    case KEY_ESC:
+        if (is_make)
+            logf("ESC");
+        break;
+    case KEY_ENTER:
+        char enter = '\n';
+        if (is_make)
+            device_write(0, 0, &enter, 1);
+        break;
+    case KEY_SPACE:
+        char space = ' ';
+        if (is_make)
+            device_write(0, 0, &space, 1);
+        break;
+    case KEY_BACKSPACE:
+        char bs = '\b';
+        if (is_make)
+            device_write(0, 0, &bs, 1);
+        break;
+    case KEY_TAB:
+        char tb = '\t';
+        if (is_make)
+            device_write(0, 0, &tb, 1);
+        break;
+    case KEY_CAPS:
+        if (is_make)
+            ks.caps_lock = ~ks.caps_lock;
+        break;
+    case KEY_CTRL:
+        if (ks.e0)
+        {
+            if (is_make)
+                logf("Right Ctrl");
+            ks.rp_ctrl = is_make;
+            ks.e0 = 0;
+        }
+        else
+        {
+            if (is_make)
+                logf("Left Ctrl");
+            ks.lp_ctrl = is_make;
+        }
+        break;
+    case KEY_ALT:
+        if (ks.e0)
+        {
+            if (is_make)
+                logf("Right Alt");
+            ks.rp_alt = is_make;
+            ks.e0 = 0;
+        }
+        else
+        {
+            if (is_make)
+                logf("Left Alt");
+            ks.lp_alt = is_make;
+        }
+        break;
+    case KEY_LEFT_SHIFT:
+        ks.lp_shift = is_make;
+        break;
+    case KEY_RIGHT_SHIFT:
+        ks.rp_shift = is_make;
+        break;
+    default:
+        if (is_make)
+        {
+            // 处理CapsLock和Shift
+            if (ks.lp_shift || ks.rp_shift)
+            {
+                key = ks.caps_lock ? kmt[key].normal : kmt[key].func;
             }
-            break;
-        case KEY_ALT:
-            if (ks.e0) {
-                if (is_make) logf("Right Alt");
-                ks.rp_alt = is_make;
-                ks.e0 = 0;
-            } else {
-                if (is_make) logf("Left Alt");
-                ks.lp_alt = is_make;
+            else
+            {
+                key = ks.caps_lock ? kmt[key].func : kmt[key].normal;
             }
-            break;
-        case KEY_LEFT_SHIFT:
-            ks.lp_shift = is_make;
-            break;
-        case KEY_RIGHT_SHIFT:
-            ks.rp_shift = is_make;
-            break;
-        default:
-            if (is_make) {
-                // 处理CapsLock和Shift
-                if (ks.lp_shift || ks.rp_shift) {
-                    key = ks.caps_lock ? kmt[key].normal : kmt[key].func;
-                } else {
-                    key = ks.caps_lock ? kmt[key].func : kmt[key].normal;
-                }
-                // logf("Key: %c", key);
-                device_write(0, 0, &key, 1);
-            }
-            break;
+            // logf("Key: %c", key);
+            device_write(0, 0, &key, 1);
+        }
+        break;
     }
 }
 
 static void handle_func_key(uint8_t rc)
 {
-
 }
 
-void handler_kbd(interrupt_frame_t* frame)
+void handler_kbd(interrupt_frame_t *frame)
 {
     uint8_t status = inb(KBD_PORT_STAT);
-    if (!(status & KBD_STATS_RR)) {
+    if (!(status & KBD_STATS_RR))
+    {
         send_eoi(IRQ1_KBD);
         return;
     }
     uint8_t rc = inb(KBD_PORT_DATA);
     handle_normal_key(rc);
     send_eoi(IRQ1_KBD);
+    // keydown=1;
 }
 
 void kbd_init()

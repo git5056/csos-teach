@@ -9,6 +9,8 @@
 //     logf(fmt, arg);
 // }
 
+void switch_task2();
+
 static const syscall_handler_t syscall_handler_table[] = {
     [SYS_NR_SLEEP]      = (syscall_handler_t)task_sleep,
     [SYS_NR_GETPID]     = (syscall_handler_t)task_getpid,
@@ -18,7 +20,9 @@ static const syscall_handler_t syscall_handler_table[] = {
     [SYS_NR_EXIT]       = (syscall_handler_t)task_exit,
     [SYS_NR_EXECVE]     = (syscall_handler_t)task_execve,
     [SYS_NR_SBRK]       = (syscall_handler_t)task_sbrk,
-    [SYS_NR_PRINTF]     = (syscall_handler_t)usr_printf
+    [SYS_NR_PRINTF]     = (syscall_handler_t)usr_printf,
+    [SYS_NR_SW]     = (syscall_handler_t)switch_task2
+    
 };
 // 远调用实现
 void syscall(syscall_frame_t *frame)

@@ -14,6 +14,7 @@ typedef struct task_args_t
 /*---------------任务模式------------------*/
 /* 注: 由于调试不方便，从系统调用功能开始不再兼容TASK_SIMPLE */
 #define TASK_TSS
+// #define TASK_SIMPLE
 /*----------------------------------------*/
 
 #ifdef TASK_SIMPLE

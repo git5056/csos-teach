@@ -32,7 +32,8 @@ void sem_notify(sem_t *sem)
     if (!list_is_empty(&sem->wait_list))
     {
         list_node_t *node = list_remove_front(&sem->wait_list);
-        task_t *task = struct_from_field(node, task_t, wait_node);
+        task_t *task ;
+        struct_from_field(task,node, task_t, wait_node);
         task_set_ready(task);
         task_dispatch();
     } else {

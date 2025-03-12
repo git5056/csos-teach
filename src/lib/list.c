@@ -79,33 +79,34 @@ list_node_t *list_get_first(list_t *list)
 
 void test_list()
 {
-    list_t list;
-    list_init(&list);
+    // list_t list;
+    // list_init(&list);
 
-    list_node_t nodes[6];
-    list_node_t *node = NULL;
-    for (int i = 0; i < 5; i++)
-    {
-        node = &nodes[i];
-        list_insert_front(&list, node);
-    }
-    list_insert_back(&list, &node[5]);
+    // list_node_t nodes[6];
+    // list_node_t *node = NULL;
+    // for (int i = 0; i < 5; i++)
+    // {
+    //     node = &nodes[i];
+    //     list_insert_front(&list, node);
+    // }
+    // list_insert_back(&list, &node[5]);
 
-    list_remove(&list, &nodes[2]);
-    list_remove_front(&list);
+    // list_remove(&list, &nodes[2]);
+    // list_remove_front(&list);
 
-    for (int i = 0; i < 4; i++)
-    {
-        list_node_t *node = list_remove_front(&list);
-    }
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     list_node_t *node = list_remove_front(&list);
+    // }
     
-    // 测试通过字段指针获得结构体指针
-    struct test_t
-    {
-        int i;
-        list_node_t node;
-    } v = { 0x123 };
-    list_node_t *v_node = &v.node;
-    uint32_t offset = field_offset(struct test_t, node);
-    struct test_t *r = struct_from_field(v_node, struct test_t, node);
+    // // 测试通过字段指针获得结构体指针
+    // struct test_t
+    // {
+    //     int i;
+    //     list_node_t node;
+    // } v = { 0x123 };
+    // list_node_t *v_node = &v.node;
+    // uint32_t offset = field_offset(struct test_t, node);
+    // struct test_t *r ;
+    // struct_from_field(r,v_node, struct test_t, node);
 }

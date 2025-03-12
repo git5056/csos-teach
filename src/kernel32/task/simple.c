@@ -96,7 +96,8 @@ void simple_task_ts()
     list_node_t *node = list_get_first(&simple_task_queue.sleep_list);
     while (node)
     {
-        simple_task_t *task = struct_from_field(node, simple_task_t, running_node);
+        simple_task_t *task ;
+        struct_from_field(task,node, simple_task_t, running_node);
         if (-- task->sleep == 0) {
             simple_task_notify(task);
             simple_task_set_ready(task);
@@ -152,7 +153,8 @@ void simple_task_dispatch()
     if (!list_is_empty(&simple_task_queue.ready_list))
     {
         list_node_t *node = list_get_first(&simple_task_queue.ready_list);
-        to = struct_from_field(node, simple_task_t, running_node);
+        //to ;
+         struct_from_field(to,node, simple_task_t, running_node);
     }
     if (to != from)
     {

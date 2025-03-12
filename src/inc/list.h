@@ -38,15 +38,21 @@ list_node_t *list_remove_front(list_t *list);
 
 list_node_t *list_get_first(list_t *list);
 
-#define field_offset(pType, fieldName) \
-    ((uint32_t)&(((pType *)0)->fieldName))
+// #define field_offset(pType, fieldName) \
+//     ((uint32_t)&(((pType *)0)->fieldName))
 
-#define struct_address(pNode, pType, fieldName) \
-    ((uint32_t)pNode - field_offset(pType, fieldName))
+// #define struct_address(pNode, pType, fieldName) \
+//     ((uint32_t)pNode - field_offset(pType, fieldName))
 
-#define struct_from_field(pNode, pType, fieldName) \
-    ((pType *)(pNode ? struct_address(pNode, pType, fieldName) : 0))
+// #define struct_from_field2(pNode, pType, fieldName) \
+//     ((pType *)(pNode ? struct_address(pNode, pType, fieldName) : 0))
 
+#define struct_from_field(ret,pNode, pType, fieldName) \
+{ \
+    pType t2; \
+    ret =(pType*)((pNode ? ((uint32_t)pNode - (((uint32_t)&(((pType *)(&t2))->running_node)) - (uint32_t)&t2)) : 0)); \
+}
+    
 void test_list();
 
 #endif

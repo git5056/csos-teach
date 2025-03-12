@@ -4,11 +4,119 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "name": "(gdb) 启动",
+           {
+            "name": "csos",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/boot.elf",
+            // "program": "${workspaceFolder}/build/kernel32.pe",
+            "program": "${workspaceFolder}/build/boot/boot2.bin.elf",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            // "miDebuggerPath": "D:/Program Files/mingw64_w64devkit-1.23.0/w64devkit/bin/gdb.exe",
+            "miDebuggerPath": "gdb.exe",
+            "miDebuggerServerAddress": "127.0.0.1:1234",
+            // "miDebuggerServerAddress": "0.0.0.0:1234",
+            "setupCommands": [
+                {
+                    "description": "Load gdbinit file",
+                    "text": "source ${workspaceFolder}/.gdbinit",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "将反汇编风格设置为 Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "postRemoteConnectCommands": [
+                // {
+                //     "description": "remove symbol file",
+                //     "text": "symbol-file"
+                //     },
+                // {
+                //     "text": "-file-symbol-file ./build/boot/boot2.bin",
+                //     "description": "加载内核文件",
+                //     "ignoreFailures": false
+                // },
+                // {
+                //     "text": "add-symbol-file ./build/kernel.elf 0x8000",
+                //     "description": "加载内核文件",
+                //     "ignoreFailures": false
+                // },
+                // {
+                //     "text": "add-symbol-file D:/git/csos-teach/src/boot/boot2.asm 0x7c00",
+                //     "description": "加载内核文件",
+                //     "ignoreFailures": false
+                // },
+                {
+                    "description": "remove symbol file",
+                    "text": "symbol-file",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "add-symbol-file  D:/git/csos-teach/build/boot/boot2.bin.elf 0x7c00",
+                    "description": "加载内核文件",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "add-symbol-file  D:/git/csos-teach/build/boot/setup.bin.elf 0x500",
+                    "description": "加载内核文件",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "add-symbol-file  D:/git/csos-teach/build/boot/mode32.bin.elf 0x800",
+                    "description": "加载内核文件",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "add-symbol-file  D:/git/csos-teach/build/pecpy.pe 0x1400",
+                    "description": "加载内核文件",
+                    "ignoreFailures": false
+                },
+                // {
+                //     "text": "add-symbol-file D:/git/csos-teach/build/pefromat.exe 0x00411000",
+                //     "description": "加载内核文件",
+                //     "ignoreFailures": false
+                // },
+                // -o -0x3f0000 0x11000 
+                // {
+                //     "text": "add-symbol-file D:/git/csos-teach/build/kernel32.pe 0x11000 -s .data 0x19000 -s .rdata 0x1a000 -s .bss 0x1d000",
+                //     "description": "加载内核文件",
+                //     "ignoreFailures": false
+                // },
+
+                {
+                    "text": "symbol-file D:/git/csos-teach/build/kernel32.pe -o -0x3f0000",//-s .data 0x19000 -s .rdata 0x1a000 -s .bss 0x1d000",
+                    "description": "加载内核文件",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "add-symbol-file D:/git/csos-teach/build/kernel32.pe 0x11000",//-s .data 0x19000 -s .rdata 0x1a000 -s .bss 0x1d000",
+                    "description": "加载内核文件",
+                    "ignoreFailures": false
+                },
+                // {
+                //     "text": "add-symbol-file ./build/shell.elf 0x4F000000",
+                //     "description": "加载内核文件",
+                //     "ignoreFailures": false
+                // }
+            ]
+        },
+        
+        {
+            "name": "testap",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/boot/testap.bin.elf",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -18,6 +126,11 @@
             "miDebuggerPath": "gdb.exe",
             "miDebuggerServerAddress": "127.0.0.1:1234",
             "setupCommands": [
+                {
+                    "description": "Load gdbinit file",
+                    "text": "source ${workspaceFolder}/.gdbinit",
+                    "ignoreFailures": false
+                },
                 {
                     "description": "为 gdb 启用整齐打印",
                     "text": "-enable-pretty-printing",
@@ -31,25 +144,15 @@
             ],
             "postRemoteConnectCommands": [
                 {
-                    "text": "-file-symbol-file ./build/boot.elf",
-                    "description": "加载内核文件",
+                    "description": "remove symbol file",
+                    "text": "symbol-file",
                     "ignoreFailures": false
                 },
                 {
-                    "text": "add-symbol-file ./build/kernel.elf 0x8000",
+                    "text": "add-symbol-file  D:/git/csos-teach/build/boot/testap.bin.elf 0x7c00",
                     "description": "加载内核文件",
                     "ignoreFailures": false
                 },
-                {
-                    "text": "add-symbol-file ./build/kernel32.elf 0x10000",
-                    "description": "加载内核文件",
-                    "ignoreFailures": false
-                },
-                {
-                    "text": "add-symbol-file ./build/shell.elf 0x4F000000",
-                    "description": "加载内核文件",
-                    "ignoreFailures": false
-                }
             ]
         }
 

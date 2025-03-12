@@ -48,12 +48,30 @@ uint32_t kernel_strlen(const char *str)
     return length;
 }
 
+int aaab=0;
 void kernel_memcpy(void *dst, void *src, uint32_t size)
 {
     if (!dst || !src || !size) return;
 
     uint8_t *s = (uint8_t *)src;
     uint8_t *d = (uint8_t *)dst;
+
+    if(aaab==1){
+        int i=0;
+        while (size--) {
+            i++;
+            if(i>=0x21&&i<=0x24){
+                *d++ = 0x12;
+                s++;
+            }else{
+                *d++ = *s++;
+            }
+   
+        }
+   
+        return;
+    }
+
     while (size--) 
         *d++ = *s++;
 }

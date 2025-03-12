@@ -4,7 +4,7 @@
 #include <tty.h>
 #include <task.h>
 
-void handler_timer(interrupt_frame_t* frame)
+void handler_timer(interrupt_frame_t *frame)
 {
     send_eoi(IRQ0_TIMER);
     task_ts();
@@ -23,9 +23,17 @@ void stop_beep()
 void timer_init()
 {
     // 配置计数器
-    uint32_t reload_count = PIT_OSC_FREQ * OS_TICKS_MS / 1000;
+    const uint32_t reload_count2231 = PIT_OSC_FREQ * OS_TICKS_MS / 200;
+    const uint32_t reload_count2 = 1590 * 1000000 / 1000;
+
+    uint32_t reload_count = reload_count2 - 1;
+    reload_count = 1000;
+    reload_count = 1193;
+    reload_count = reload_count2231;
+    // reload_count = 109;
+    uint32_t t3 = reload_count & 0xFFFF;
     outb(PIT_CMD_MODE_PORT, PIT_CHANNLE0 | PIT_LOAD_LOHI | PIT_MODE0);
-    outb(PIT_CHL0_DATA_PORT, reload_count & 0xFF); 
+    outb(PIT_CHL0_DATA_PORT, reload_count & 0xFF);
     outb(PIT_CHL0_DATA_PORT, (reload_count >> 8) & 0xFF);
 
     // 配置蜂鸣器
